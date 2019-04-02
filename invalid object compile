@@ -1,0 +1,29 @@
+BEGIN
+  -- take invalid object list as curser
+  FOR cur_rec IN (SELECT owner,
+                         object_name,
+                         object_type,
+                         DECODE(object_type, 'PACKAGE', 1,
+                                             'PACKAGE BODY', 2, 3) AS recompile_order
+                  FROM   dba_objects
+                  WHERE  object_type IN ('PACKAGE', 'PACKAGE BODY','TRIGGER')
+                  AND    status != 'VALID'                  
+                  AND owner ='OWNER NAME'
+                  ORDER BY 4)
+  LOOP
+    BEGIN      
+	  IF cur_rec.object_type = 'PACKAGE BODY' THEN
+		 EXECUTE IMMEDIATE 'ALTER PACKAGE "' || cur_rec.owner || 
+            '"."' || cur_rec.object_name || '" COMPILE BODY';
+      ElSE
+        -- execute alter statment to compile object.
+        EXECUTE IMMEDIATE 'ALTER ' || cur_rec.object_type || 
+            ' "' || cur_rec.owner || '"."' || cur_rec.object_name || '" COMPILE';
+      END IF;
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.put_line(cur_rec.object_type || ' : ' || cur_rec.owner || 
+                             ' : ' || cur_rec.object_name);
+    END;
+  END LOOP;
+END;
