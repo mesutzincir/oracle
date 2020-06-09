@@ -1,0 +1,27 @@
+-- convert the string contains names of workers that split a comma,
+select TRIM(regexp_substr('mesut,akif,mustafa', '[^,]+', 1, LEVEL)) name from dual
+connect by regexp_substr('mesut,akif,mustafa', '[^,]+', 1, LEVEL) is not null
+/
+
+result:
+name
+-----
+mesut
+akif
+mustafa
+
+-- using above sctript in a WITH statment
+with workers as (
+select TRIM(regexp_substr('mesut,akif,mustafa', '[^,]+', 1, LEVEL)) name from dual
+connect by regexp_substr('mesut,akif,mustafa', '[^,]+', 1, LEVEL) is not null
+)
+select *
+from workers 
+/
+
+result:
+name
+-----
+mesut
+akif
+mustafa
